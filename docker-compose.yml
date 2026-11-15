@@ -1,0 +1,37 @@
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile.jenkins
+    container_name: jenkins
+    user: root
+    ports:
+      - "8080:8080"
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+      - CASC_JENKINS_CONFIG=/casc/casc.yaml
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./app:/var/shopease-repo:ro
+      - ./casc.yaml:/casc/casc.yaml:ro
+    networks:
+      - shopease-net
+
+  notify-receiver:
+    image: python:3.12-alpine
+    container_name: notify-receiver
+    command: python -u /app/receiver.py
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./receiver:/app:ro
+    networks:
+      - shopease-net
+
+volumes:
+  jenkins_home:
+
+networks:
+  shopease-net:
+    name: shopease-net
